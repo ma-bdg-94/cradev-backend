@@ -1,0 +1,1 @@
+export const userTypes: string[] = ['Admin', 'Developer', 'Designer', 'QA Tester']

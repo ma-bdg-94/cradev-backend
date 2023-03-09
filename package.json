@@ -1,0 +1,45 @@
+{
+  "name": "cradev-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/app.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node  --exec npx ts-node ./src/app.ts",
+    "server": "nodemon  --exec npx ts-node ./src/app.ts"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.2",
+    "@types/body-parser": "^1.19.2",
+    "@types/express": "github:types/express",
+    "@types/gravatar": "^1.8.3",
+    "@types/jsonwebtoken": "^9.0.1",
+    "@types/mongoose-delete": "^0.5.9",
+    "@types/multer": "^1.4.7",
+    "@types/node": "^18.11.13",
+    "@types/nodemailer": "^6.4.7",
+    "@types/nodemailer-smtp-transport": "^2.7.5",
+    "concurrently": "^7.6.0",
+    "nodemon": "^2.0.20",
+    "ts-node": "^10.9.1",
+    "tslint": "^6.1.3",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-validator": "^6.14.2",
+    "gravatar": "^1.8.2",
+    "http-status": "^1.5.3",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.8.0",
+    "mongoose-delete": "^0.5.4",
+    "multer": "^1.4.5-lts.1",
+    "nodemailer": "^6.9.1",
+    "nodemailer-smtp-transport": "^2.7.4"
+  }
+}
