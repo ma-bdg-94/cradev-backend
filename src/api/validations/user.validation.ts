@@ -1,4 +1,4 @@
-import { check, body, ValidationChain } from 'express-validator'
+import { body, ValidationChain } from 'express-validator'
 import { userTypes } from '../utilities/constants/userTypes'
 
 export default class UserValidation {

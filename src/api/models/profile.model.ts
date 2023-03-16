@@ -7,7 +7,13 @@ interface ProfileInterface {
   userType: string
   email: string
   phone: string
-  avatar?: string
+  photo?: string
+  cv?: string
+  address: string
+  postalCode: string
+  city: string
+  country: string
+  technologies: string[]
 }
 
 const ProfileSchema = new Schema<ProfileInterface>(
@@ -41,7 +47,30 @@ const ProfileSchema = new Schema<ProfileInterface>(
       unique: true,
       trim: true
     },
-    avatar: {
+    address: {
+      type: String,
+      required: true
+    },
+    postalCode: {
+      type: String,
+      required: true
+    },
+    city: {
+      type: String,
+      required: true
+    },
+    country: {
+      type: String,
+      required: true
+    },
+    technologies: [{
+      type: String,
+      required: true
+    }],
+    photo: {
+      type: String
+    },
+    cv: {
       type: String
     }
   },
