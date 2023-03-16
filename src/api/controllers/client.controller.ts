@@ -1,5 +1,6 @@
 import { Request, Response } from 'express'
 import { Result, ValidationError, validationResult } from 'express-validator'
+import { url } from 'gravatar'
 import {
   BAD_REQUEST,
   CREATED,
@@ -9,30 +10,12 @@ import {
   OK
 } from 'http-status'
 import multer from 'multer'
-import { Profile, User } from '../models'
+import { Client, User } from '../models'
 import upload from '../utilities/helpers/fileUpload.helper'
+import { getClientServiceCode } from '../utilities/helpers/getClientServiceCode'
 
-export default class ProfileController {
-  async getCurrentProfile (req: Request, res: Response): Promise<any> {
-    try {
-      let profile = await Profile.findOne({ user: (req as any).user.id })
-      if (!profile) {
-        return res.status(NOT_FOUND).json({
-          errors: [
-            { msg: 'Cannot find profile for this user! Would you create one?' }
-          ]
-        })
-      }
-      res.status(OK).json({ profile })
-    } catch (error: any) {
-      console.error(error.message)
-      res
-        .status(INTERNAL_SERVER_ERROR)
-        .send('Server Error! Something went wrong!')
-    }
-  }
-
-  async createProfile (req: Request, res: Response): Promise<any> {
+export default class ClientController {
+  async addClient (req: Request, res: Response): Promise<any> {
     const errors: Result<ValidationError> = validationResult(req)
 
     if (!errors.isEmpty()) {
@@ -54,47 +37,54 @@ export default class ProfileController {
       }
     })
 
-    const { address, postalCode, city, country, technologies } = (req as any)
-      .body
-    const cv: any = (req as any).file
+    const {
+      address,
+      postalCode,
+      city,
+      country,
+      fullName,
+      clientType,
+      email,
+      phone,
+      service
+    } = (req as any).body
+    let logo = ''
+
+    if ((req as any).file) {
+      logo = (req as any).file.path
+    } else {
+      const avatarUrl = url(email, { s: '200', d: 'retro' }, true)
+      logo = avatarUrl
+    }
+
+    let serviceCode = getClientServiceCode(service)
 
     try {
       const user = await User.findOne({ _id: (req as any).user.id })
-      let profile = await Profile.findOne({ user: user?._id })
 
-      if (profile) {
-        return res.status(BAD_REQUEST).json({
-          errors: [{ msg: 'This user already have a profile!' }]
-        })
-      }
-
-      profile = new Profile({
+      let client = new Client({
         user: (req as any).user.id,
-        firstName: user?.firstName,
-        lastName: user?.lastName,
-        userType: user?.userType,
-        phone: user?.phone,
-        email: user?.email,
-        photo: user?.photo,
+        fullName,
+        clientType,
+        phone,
+        email,
+        logo,
         address,
         postalCode,
         city,
         country,
-        technologies,
-        cv
+        service,
+        serviceCode
       })
 
-      if (
-        profile &&
-        profile?.user?.toString() !== (req as any).user?.id?.toString()
-      ) {
+      if (user?.userType !== 'Admin') {
         return res.status(FORBIDDEN).json({
           errors: [{ msg: 'Forbidden Operation!' }]
         })
       }
 
-      await profile.save()
-      res.status(CREATED).json({ profile })
+      await client.save()
+      res.status(CREATED).json({ client })
     } catch (error: any) {
       console.error(error.message)
       res
@@ -103,7 +93,7 @@ export default class ProfileController {
     }
   }
 
-  async updateProfile (req: Request, res: Response): Promise<any> {
+  async updateClient (req: Request, res: Response): Promise<any> {
     const uploadMiddleware = upload.single('cv')
 
     uploadMiddleware(req, res, async (err: any) => {
@@ -118,46 +108,45 @@ export default class ProfileController {
     })
 
     const {
-      firstName,
-      lastName,
-      email,
-      phone,
-      userType,
       address,
       postalCode,
       city,
       country,
-      technologies
+      fullName,
+      clientType,
+      email,
+      service,
+      phone
     } = (req as any).body
-    const { cv, photo } = (req as any).file
+    const { logo } = (req as any).file
+    const serviceCode = getClientServiceCode(service)
 
-    const profileFields: any = {}
-    if (firstName) profileFields['firstName'] = firstName
-    if (lastName) profileFields['lastName'] = lastName
-    if (email) profileFields['email'] = email
-    if (phone) profileFields['phone'] = phone
-    if (userType) profileFields['userType'] = userType
-    if (address) profileFields['address'] = address
-    if (postalCode) profileFields['postalCode'] = postalCode
-    if (city) profileFields['city'] = city
-    if (country) profileFields['country'] = country
-    if (technologies) profileFields['technologies'] = technologies
-    if (cv) profileFields['cv'] = cv
-    if (photo) profileFields['photo'] = photo
+    const clientFields: any = {}
+    if (fullName) clientFields['fullName'] = fullName
+    if (clientType) clientFields['clientType'] = clientType
+    if (email) clientFields['email'] = email
+    if (phone) clientFields['phone'] = phone
+    if (service) clientFields['service'] = service
+    if (address) clientFields['address'] = address
+    if (postalCode) clientFields['postalCode'] = postalCode
+    if (city) clientFields['city'] = city
+    if (country) clientFields['country'] = country
+    if (logo) clientFields['logo'] = logo
+    if (serviceCode) clientFields['serviceCode'] = serviceCode
 
     try {
-      let profile = await Profile.findOne({ _id: req.params.profileId })
+      let client = await Client.findOne({ _id: req.params.clientId })
       let user = await User.findById((req as any).user.id).select('-password')
 
-      if (!profile) {
+      if (!client) {
         return res.status(NOT_FOUND).json({
-          errors: [{ msg: 'Cannot find profile!' }]
+          errors: [{ msg: 'Cannot find this client!' }]
         })
       }
 
       if (
-        profile &&
-        (profile?.user?.toString() !== (req as any).user?.id?.toString() ||
+        client &&
+        (client?.user?.toString() !== (req as any).user?.id?.toString() ||
           user?.userType !== 'Admin')
       ) {
         return res.status(FORBIDDEN).json({
@@ -165,12 +154,12 @@ export default class ProfileController {
         })
       }
 
-      profile = await Profile.findOneAndUpdate(
-        { _id: req.params.profileId },
-        { $set: profileFields },
+      client = await Client.findOneAndUpdate(
+        { _id: req.params.clientId },
+        { $set: clientFields },
         { new: true }
       )
-      res.status(OK).json({ profile })
+      res.status(OK).json({ client })
     } catch (error: any) {
       console.error(error.message)
       res
@@ -179,17 +168,17 @@ export default class ProfileController {
     }
   }
 
-  async getProfileList (req: Request, res: Response): Promise<any> {
+  async getClientList (req: Request, res: Response): Promise<any> {
     try {
-      const profileList = await Profile.find()
+      const clientList = await Client.find()
 
-      if (profileList?.length === 0) {
+      if (clientList?.length === 0) {
         return res.status(NOT_FOUND).json({
-          errors: [{ msg: 'Cannot find any profiles!' }]
+          errors: [{ msg: 'Cannot find any clients!' }]
         })
       }
 
-      res.status(OK).json({ profileList })
+      res.status(OK).json({ clientList })
     } catch (error: any) {
       console.error(error.message)
       res
@@ -198,17 +187,17 @@ export default class ProfileController {
     }
   }
 
-  async getProfileListByType (req: Request, res: Response): Promise<any> {
+  async getClientListByService (req: Request, res: Response): Promise<any> {
     try {
-      const profileList = await Profile.find({ userType: req.params.userType })
+      const clientList = await Client.find({ userType: req.params.serviceCode })
 
-      if (profileList?.length === 0) {
+      if (clientList?.length === 0) {
         return res.status(NOT_FOUND).json({
-          errors: [{ msg: 'Cannot find any profiles!' }]
+          errors: [{ msg: 'Cannot find any clients!' }]
         })
       }
 
-      res.status(OK).json({ profileList })
+      res.status(OK).json({ clientList })
     } catch (error: any) {
       console.error(error.message)
       res
@@ -217,17 +206,17 @@ export default class ProfileController {
     }
   }
 
-  async getProfile (req: Request, res: Response): Promise<any> {
+  async getClient (req: Request, res: Response): Promise<any> {
     try {
-      const profile = await Profile.findOne({ _id: req.params.profileId })
+      const client = await Client.findOne({ _id: req.params.clientId })
 
-      if (!profile) {
+      if (!client) {
         return res.status(NOT_FOUND).json({
-          errors: [{ msg: 'Cannot find any profile!' }]
+          errors: [{ msg: 'Cannot find any client!' }]
         })
       }
 
-      res.status(OK).json({ profile })
+      res.status(OK).json({ client })
     } catch (error: any) {
       console.error(error.message)
       res
@@ -236,24 +225,24 @@ export default class ProfileController {
     }
   }
 
-  async deleteProfile (req: Request, res: Response): Promise<any> {
+  async removeClient (req: Request, res: Response): Promise<any> {
     try {
-      let profile = await Profile.findOne({ _id: req.params.profileId })
+      let client = await Client.findOne({ _id: req.params.clientId })
       let user = await User.findOne({ _id: (req as any).user.id })
 
-      if (!profile) {
+      if (!client) {
         return res.status(NOT_FOUND).json({
-          errors: [{ msg: 'Cannot find any profile!' }]
+          errors: [{ msg: 'Cannot find any client!' }]
         })
       }
 
-      if (profile && user?.userType !== 'Admin') {
+      if (client && user?.userType !== 'Admin') {
         return res.status(FORBIDDEN).json({
           errors: [{ msg: 'Forbidden Operation!' }]
         })
       }
 
-      profile = await Profile.findByIdAndDelete({ _id: req.params.profileId })
+      client = await Client.findByIdAndDelete({ _id: req.params.clientId })
       user = await User.findOneAndUpdate(
         { _id: (req as any).user.id },
         { deleted: true },

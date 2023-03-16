@@ -1,5 +1,5 @@
 import { body, ValidationChain } from 'express-validator'
-import { userTypes } from '../utilities/constants/userTypes'
+import { userTypes } from '../utilities/constants/types'
 
 export default class UserValidation {
   register: ValidationChain[] = [
@@ -48,7 +48,12 @@ export default class UserValidation {
   addUser: ValidationChain[] = [
     body('firstName').not().isEmpty().withMessage('First Name is required!'),
     body('lastName').not().isEmpty().withMessage('Last Name is required!'),
-    body('userType').not().isEmpty().withMessage('User Type is required!').isIn(userTypes).withMessage('Invalid User Type!'),
+    body('userType')
+      .not()
+      .isEmpty()
+      .withMessage('User Type is required!')
+      .isIn(userTypes)
+      .withMessage('Invalid User Type!'),
     body('email')
       .not()
       .isEmpty()

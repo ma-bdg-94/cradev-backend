@@ -1,8 +1,7 @@
 import { Schema, model } from 'mongoose'
 import { genSalt, hash } from 'bcryptjs'
-import { userTypes } from '../utilities/constants/userTypes'
+import { userTypes } from '../utilities/constants/types'
 import deletePlugin from 'mongoose-delete'
-
 
 interface UserInterface {
   firstName: string
@@ -32,7 +31,7 @@ const UserSchema = new Schema<UserInterface>(
       type: String,
       required: true,
       enum: userTypes,
-      default: 'Admin',
+      default: 'Admin'
     },
     email: {
       type: String,
@@ -48,7 +47,7 @@ const UserSchema = new Schema<UserInterface>(
       trim: true
     },
     password: {
-      type: String,
+      type: String
       //required: true,
       //minlength: 8
     },
@@ -81,4 +80,3 @@ UserSchema.pre('save', async function (next: any) {
 
 const User = model('User', UserSchema)
 export default User
-
