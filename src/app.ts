@@ -2,8 +2,8 @@ import express, { Application } from 'express'
 import bodyParser from 'body-parser'
 const app: Application = express()
 
-import { config } from 'dotenv'
-config()
+import 'dotenv/config'
+//config()
 
 
 import { connectToMongoDB } from './database'

@@ -31,3 +31,15 @@ export const serviceTypes: string[] = [
   'Marketing & PR',
   'Media Services'
 ]
+
+export const projectTypes: string[] = [
+  'Web Frontend',
+  'Web Backend',
+  'Web Fullstack',
+  'AI',
+  'IoT',
+  'Embedded Systems',
+  'Mobile Android',
+  'Mobile iOS',
+  'Mobile Cross-Platform'
+]

@@ -323,7 +323,7 @@ export default class UserController {
         }
       }
       const token = await signToken(payload)
-      await sendPasswordMail(email, token)
+      await sendPasswordMail(email, token, user.firstName)
       res.status(CREATED).json({ msg: 'Email sent!' })
     } catch (error: any) {
       console.error(error.message)
