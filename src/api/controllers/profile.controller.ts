@@ -70,8 +70,7 @@ export default class ProfileController {
 
       profile = new Profile({
         user: (req as any).user.id,
-        firstName: user?.firstName,
-        lastName: user?.lastName,
+        fullName: user?.fullName,
         userType: user?.userType,
         phone: user?.phone,
         email: user?.email,
@@ -118,8 +117,7 @@ export default class ProfileController {
     })
 
     const {
-      firstName,
-      lastName,
+      fullName,
       email,
       phone,
       userType,
@@ -132,8 +130,7 @@ export default class ProfileController {
     const { cv, photo } = (req as any).file
 
     const profileFields: any = {}
-    if (firstName) profileFields['firstName'] = firstName
-    if (lastName) profileFields['lastName'] = lastName
+    if (fullName) profileFields['fullName'] = fullName
     if (email) profileFields['email'] = email
     if (phone) profileFields['phone'] = phone
     if (userType) profileFields['userType'] = userType

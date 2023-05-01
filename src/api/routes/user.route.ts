@@ -8,8 +8,9 @@ import { userController } from '../controllers'
 const { registerAdmin, loginUser, addNewUser, getAuthUser, getUser, getUsersByType, removeUser, requestPasswordChange, updatePassword } = userController
 
 import isAuth from '../middlewares/isAuth.middleware'
+import upload from '../utilities/helpers/fileUpload.helper'
 
-router.post('/auth/new', register, registerAdmin)
+router.post('/auth/new', [upload.single('photo'), (register as any)], registerAdmin)
 router.post('/auth', login, loginUser)
 router.post('/', [isAuth, (addUser as any)], addNewUser)
 router.post('/reset-password', passwordRequest, requestPasswordChange)

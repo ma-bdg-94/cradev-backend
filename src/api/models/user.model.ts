@@ -4,8 +4,7 @@ import { userTypes } from '../utilities/constants/types'
 import deletePlugin from 'mongoose-delete'
 
 interface UserInterface {
-  firstName: string
-  lastName: string
+  fullName: string
   userType: string
   email: string
   phone: string
@@ -19,11 +18,7 @@ const rounds = parseInt(process.env.BCRYPTJS_ROUNDS!)
 
 const UserSchema = new Schema<UserInterface>(
   {
-    firstName: {
-      type: String,
-      required: true
-    },
-    lastName: {
+    fullName: {
       type: String,
       required: true
     },

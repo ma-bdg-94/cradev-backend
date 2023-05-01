@@ -104,7 +104,7 @@ export default class ProjectController {
       await sendAssignmentMail(
         email,
         token,
-        user?.firstName,
+        user?.fullName,
         project?._id,
         project?.title,
         project?.client?.fullName

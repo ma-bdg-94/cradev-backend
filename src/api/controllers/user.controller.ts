@@ -33,29 +33,16 @@ export default class UserController {
         .json({ errors: errors.array({ onlyFirstError: true }) })
     }
 
-    const uploadMiddleware = upload.single('photo') // 'photo' is the field name in the form data
-
-    uploadMiddleware(req, res, async (err: any) => {
-      if (err instanceof multer.MulterError) {
-        // A Multer error occurred when uploading.
-        return res.status(BAD_REQUEST).json({ errors: [{ msg: err.message }] })
-      } else if (err) {
-        // An unknown error occurred when uploading.
-        console.error(err.message)
-        return res
-          .status(INTERNAL_SERVER_ERROR)
-          .json({ errors: [{ msg: 'Server Error! Something went wrong!' }] })
-      }
-    })
-
-    const { firstName, lastName, email, phone, password } = (req as any).body
+    const { fullName, email, phone, password } = (req as any).body
     let photo = ''
 
     if ((req as any).file) {
       photo = (req as any).file.path
+      console.log("I will use photo")
     } else {
       const avatarUrl = url(email, { s: '200', d: 'retro' }, true)
       photo = avatarUrl
+      console.log("I will use avatar")
     }
 
     try {
@@ -67,8 +54,7 @@ export default class UserController {
       }
 
       user = new User({
-        firstName,
-        lastName,
+        fullName,
         userType: 'Admin',
         email,
         phone,
@@ -85,7 +71,7 @@ export default class UserController {
       }
 
       const token = await signToken(payload)
-      return res.status(CREATED).json({ token })
+      return res.status(CREATED).json({ token, message: 'New Admin Registered!' })
     } catch (error: any) {
       console.error(error.message)
       res
@@ -103,24 +89,24 @@ export default class UserController {
         .json({ errors: errors.array({ onlyFirstError: true }) })
     }
 
-    const { email, phone, password } = (req as any).body
+    const { email, password } = (req as any).body
 
-    const signToken = (payload: any) => {
-      return new Promise((resolve, reject) => {
-        sign(
-          payload,
-          process.env.JWT_SECRET!,
-          { expiresIn: '1h' },
-          (error, token) => {
-            if (error) reject(error)
-            resolve(token)
-          }
-        )
-      })
-    }
+    // const signToken = (payload: any) => {
+    //   return new Promise((resolve, reject) => {
+    //     sign(
+    //       payload,
+    //       process.env.JWT_SECRET!,
+    //       { expiresIn: '1h' },
+    //       (error, token) => {
+    //         if (error) reject(error)
+    //         resolve(token)
+    //       }
+    //     )
+    //   })
+    // }
 
     try {
-      let user = await User.findOne({ $or: [{ email }, { phone }] })
+      let user = await User.findOne({ email })
       if (!user) {
         return res.status(NOT_FOUND).json({
           errors: [{ msg: 'Cannot find user with those credentials!' }]
@@ -141,7 +127,7 @@ export default class UserController {
       }
 
       const token = await signToken(payload)
-      return res.status(OK).json({ token })
+      return res.status(OK).json({ token, message: 'Logged In Sucessfully!' })
     } catch (error: any) {
       console.error(error.message)
       res
@@ -159,7 +145,15 @@ export default class UserController {
         .json({ errors: errors.array({ onlyFirstError: true }) })
     }
 
-    const { firstName, lastName, email, userType, phone } = (req as any).body
+    const { fullName, email, userType, phone } = (req as any).body
+    let photo = ''
+
+    if ((req as any).file) {
+      photo = (req as any).file.path
+    } else {
+      const avatarUrl = url(email, { s: '200', d: 'retro' }, true)
+      photo = avatarUrl
+    }
 
     try {
       let currentUser = await User.findOne({ _id: (req as any).user.id })
@@ -182,12 +176,12 @@ export default class UserController {
       }
 
       user = new User({
-        firstName,
-        lastName,
+        fullName,
         userType,
         email,
         phone,
-        password: password
+        password: password,
+        photo
       })
 
       if (user?.userType == 'Admin') {
@@ -323,7 +317,7 @@ export default class UserController {
         }
       }
       const token = await signToken(payload)
-      await sendPasswordMail(email, token, user.firstName)
+      await sendPasswordMail(email, token, user.fullName)
       res.status(CREATED).json({ msg: 'Email sent!' })
     } catch (error: any) {
       console.error(error.message)
